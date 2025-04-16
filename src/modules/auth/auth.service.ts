@@ -1,37 +1,42 @@
-// src/modules/auth/application/services/auth.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Inject, ConflictException } from '@nestjs/common';
+import {
+  IUserRepository,
+  USER_REPOSITORY,
+} from './domain/repositories/user.repository.interface';
+import { RegisterUserDto } from './application/dto/register-user.dto';
 import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { IUserRepository } from '../../domain/repositories/user.repository.interface';
-import { RegisterUserDto } from '../dto/register-user.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(USER_REPOSITORY) // ✅ gunakan konstanta, bukan string literal
     private readonly userRepository: IUserRepository,
-    private readonly jwtService: JwtService,
   ) {}
 
   async register(dto: RegisterUserDto) {
+    const existingUser = await this.userRepository.findByEmail(dto.email);
+    if (existingUser) {
+      throw new ConflictException('Email sudah digunakan');
+    }
+
     const user = this.userRepository.buat(dto);
     user.password = await bcrypt.hash(dto.password, 10);
+
     return await this.userRepository.simpan(user);
   }
 
   async login(email: string, password: string) {
-    const user = await this.userRepository.cariByEmail(email);
-    if (!user) throw new UnauthorizedException('Email tidak ditemukan');
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) throw new UnauthorizedException('Password salah');
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw new Error('Invalid credentials');
+    }
 
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      username: user.username,
-    };
-    const token = this.jwtService.sign(payload);
-
-    return { access_token: token };
+    // TODO: return JWT token or other login result
+    return user;
   }
 }

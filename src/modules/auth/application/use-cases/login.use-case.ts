@@ -1,6 +1,6 @@
 // src/modules/auth/application/use-cases/login.use-case.ts
 import { Injectable } from '@nestjs/common';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../../auth.service';
 import { LoginUserDto } from '../dto/login-user.dto';
 
 @Injectable()

@@ -1,37 +1,46 @@
 // src/app.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm'; // Menambahkan DataSource
-import { AuthController } from './modules/auth/presentation/controllers/auth.controller';
-import { UserRepository } from './modules/auth/infrastructure/database/user.repository';
-import { RegisterUserUseCase } from './modules/auth/application/use-cases/register-user.use-case';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
 import { User } from './modules/auth/infrastructure/entities/user.entity';
-import { AuthService } from './modules/auth/application/services/auth.service';
-import { JwtModule } from '@nestjs/jwt'; // Import JwtModule untuk otentikasi
-import { AuthModule } from './modules/auth/auth.module'; // Pastikan AuthModule diimpor
+import { JwtModule } from '@nestjs/jwt';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '',
-      database: 'postgres',
-      entities: [User], // Menghubungkan entitas User
-      synchronize: true,
+    ConfigModule.forRoot({ isGlobal: true }),
+
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DB_HOST'),
+        port: config.get<number>('DB_PORT'),
+        username: config.get<string>('DB_USERNAME'),
+        password: config.get<string>('DB_PASSWORD'),
+        database: config.get<string>('DB_NAME'),
+        entities: [User],
+        synchronize: false,
+      }),
+      inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([UserRepository]), // Menghubungkan UserRepository ke module
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'default_secret_key', // Gantilah dengan secret key yang lebih aman
-      signOptions: { expiresIn: '1h' }, // Pengaturan untuk masa berlaku JWT
+
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: config.get<string>('JWT_EXPIRES_IN') || '1h',
+        },
+      }),
+      inject: [ConfigService],
     }),
-    AuthModule, // Pastikan AuthModule ada di imports
+
+    // ⬇️ Cukup import AuthModule
+    AuthModule,
   ],
-  controllers: [AuthController],
-  providers: [UserRepository, RegisterUserUseCase, AuthService],
 })
 export class AppModule {
-  constructor(private dataSource: DataSource) {} // Menambahkan DataSource untuk akses DB
+  constructor(private dataSource: DataSource) {}
 }

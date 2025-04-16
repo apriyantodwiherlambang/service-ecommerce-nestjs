@@ -1,8 +1,7 @@
-// src/modules/auth/domain/repositories/user.repository.interface.ts
-import { User } from '../../infrastructure/entities/user.entity';
+export const USER_REPOSITORY = 'USER_REPOSITORY';
 
 export interface IUserRepository {
-  cariByEmail(email: string): Promise<User | null>;
-  simpan(user: User): Promise<User>;
-  buat(dto: any): User;
+  findByEmail(email: string): Promise<any>; // or Promise<User | null>
+  simpan(user: any): Promise<any>;
+  buat(dto: any): any;
 }

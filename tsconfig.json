@@ -3,6 +3,11 @@
     "target": "ES6",
     "module": "commonjs",
     "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "paths": {
+      "@modules/*": ["modules/*"]
+    },
     "strict": true,
     "strictPropertyInitialization": false,
     "esModuleInterop": true,
@@ -12,5 +17,6 @@
     "emitDecoratorMetadata": true,
     "moduleResolution": "node"
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }
