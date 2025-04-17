@@ -1,5 +1,5 @@
 // src/modules/auth/application/use-cases/login.use-case.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from '../../auth.service';
 import { LoginUserDto } from '../dto/login-user.dto';
 
@@ -8,6 +8,10 @@ export class LoginUserUseCase {
   constructor(private readonly authService: AuthService) {}
 
   async execute(dto: LoginUserDto) {
-    return await this.authService.login(dto.email, dto.password);
+    const result = await this.authService.login(dto.email, dto.password);
+    if (!result) {
+      throw new UnauthorizedException('Email atau password salah');
+    }
+    return result;
   }
 }

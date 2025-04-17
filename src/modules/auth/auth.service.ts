@@ -1,16 +1,25 @@
-import { Injectable, Inject, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   IUserRepository,
   USER_REPOSITORY,
 } from './domain/repositories/user.repository.interface';
 import { RegisterUserDto } from './application/dto/register-user.dto';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(USER_REPOSITORY) // ✅ gunakan konstanta, bukan string literal
+    @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
+
+    // ⬇️ Tambahkan ini untuk bisa gunakan this.jwtService
+    private readonly jwtService: JwtService,
   ) {}
 
   async register(dto: RegisterUserDto) {
@@ -28,15 +37,24 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
-      throw new Error('User not found');
+      throw new UnauthorizedException('Email atau password salah');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedException('Email atau password salah');
     }
 
-    // TODO: return JWT token or other login result
-    return user;
+    const payload = { sub: user.id, email: user.email };
+    const token = this.jwtService.sign(payload); // ✅ Sekarang tidak error
+
+    return {
+      accessToken: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+      },
+    };
   }
 }
