@@ -1,3 +1,4 @@
+// src/modules/auth/infrastructure/database/user.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,22 +13,23 @@ export class UserRepository implements IUserRepository {
     private readonly userRepo: Repository<User>,
   ) {}
 
-  // Implementasi findByEmail sesuai dengan yang ada di IUserRepository
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepo.findOne({ where: { email } });
   }
 
-  // Method untuk menyimpan user baru
+  async findById(id: number): Promise<User | null> {
+    return this.userRepo.findOne({ where: { id } });
+  }
+
   async simpan(user: User): Promise<User> {
     return this.userRepo.save(user);
   }
 
-  // Method untuk membuat user baru berdasarkan DTO
   buat(dto: RegisterUserDto): User {
     const user = new User();
     user.email = dto.email;
     user.username = dto.username;
-    user.password = dto.password; // Pastikan untuk meng-hash password saat diperlukan
+    user.password = dto.password;
     return user;
   }
 }

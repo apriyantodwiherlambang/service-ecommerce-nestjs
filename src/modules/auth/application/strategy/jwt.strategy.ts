@@ -1,5 +1,4 @@
-// src/modules/auth/strategy/jwt.strategy.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,8 +21,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<User> {
+    console.log('Payload JWT:', payload); // Cek isi payload
     const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-    if (!user) throw new Error('User tidak ditemukan');
+    if (!user) {
+      throw new UnauthorizedException('User tidak ditemukan');
+    }
     return user;
   }
 }

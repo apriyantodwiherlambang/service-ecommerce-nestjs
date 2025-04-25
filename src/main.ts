@@ -25,6 +25,7 @@ async function bootstrap() {
       .setTitle('E-Commerce API')
       .setDescription('API documentation for E-Commerce Flutter')
       .setVersion('1.0')
+      .addBearerAuth()
       .addTag('ecommerce')
       .build();
 

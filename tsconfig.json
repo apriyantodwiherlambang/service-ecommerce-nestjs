@@ -8,6 +8,7 @@
     "paths": {
       "@modules/*": ["modules/*"]
     },
+    "typeRoots": ["./node_modules/@types", "./src/@types"],
     "strict": true,
     "strictPropertyInitialization": false,
     "esModuleInterop": true,
@@ -17,6 +18,6 @@
     "emitDecoratorMetadata": true,
     "moduleResolution": "node"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/@types/express/index.d.ts"],
   "exclude": ["node_modules"]
 }
